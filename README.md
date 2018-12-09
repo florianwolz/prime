@@ -37,3 +37,9 @@ system of partial differential equations into a huge linear algebra problem.
 
 Prime tackles this problem by completely automating the process between the input data and the
 final Lagrangian.
+
+# License
+
+Prime is released under the Apache 2.0 licence. See [LICENSE](https://github.com/crazyphysicist/cobalt/blob/master/LICENSE.txt)
+
+Crafted with :heart: and lots of :coffee: as part of my PhD thesis.
