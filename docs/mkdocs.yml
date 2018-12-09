@@ -1,0 +1,9 @@
+site_name: Prime
+
+theme:
+  name: 'material'
+
+nav:
+  - Home: index.md
+  - Guide: guide.md
+  - API: api.md 
