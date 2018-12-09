@@ -69,12 +69,18 @@ def bringListIntoOrder(l, elements):
             result.append(x)
     return result
 
-    
+
 class Index:
     def __init__(self, indices, symmetries=None):
         self.indices = list(indices)
-        self.symmetries = symmetries
+        self.symmetries = symmetries or []
 
+    """
+    Canonicalizes the index assignment
+
+    Canonicalize the index assignment by ordering the indices on epsilon (if present),
+    on each gamma term and then ordering the gamma blocks by first indices.
+    """
     def canonicalize(self):
         num = len(self.indices)
 
@@ -94,11 +100,146 @@ class Index:
             indices = a + b.indices
             return Index(indices=indices, symmetries=self.symmetries)
 
+    """
+    Exchange indices to bring the given indices into the desired order.
+
+    Args:
+        indices         The indices.
+    """
+    def bringIntoOrder(self, indices):
+        # If elements is a list of tuples(!)
+        if type(indices) is list:
+            result = self
+            for e in indices: result = result.bringIntoOrder(e)
+            return result
+
+        # Else
+        result = []
+        i=0
+        for x in self.indices:
+            if x in indices:
+                result.append(indices[i])
+                i=i+1
+            else:
+                result.append(x)
+
+        return Index(result, self.symmetries)
+
+    def rank(self):
+        return len(self.indices)
+
     def __str__(self):
         return "".join([chr(ord('a') + i) for i in self.indices])
 
     def __repr__(self):
         return str(self)
+
+    def __eq__(self, other):
+        return str(self) == str(other)
+
+
+class Indices:
+    def __init__(self, rank):
+        self.rank = rank
+        self.indices = [Index(idx) for idx in generateEvenRank(list(range(rank)))]
+
+    def symmetrize(self, symmetries, kind="symmetric"):
+        # Antisymmetrization is not so well, tested so throw for now
+        if kind == "antisymmetric":
+            raise Exception("Antisymmetrization support is still shaky.")
+
+        if symmetries is None:
+            return indices
+
+        if type(symmetries) is not list:
+            symmetries = [symmetries]
+
+        # Type check
+        for sym in symmetries:
+            if type(sym) is not tuple:
+                raise Exception("Expected a tuple with the indices. Instead got {}".format(sym))
+
+        # Prepare result
+        from itertools import permutations, product
+
+        for e in self.indices:
+            # Generate all the possible index permutations of the symmetries
+            perms = list(product(*[list(permutations(tuple(sym))) for sym in symmetries]))
+            perms = [list(e) for e in perms]
+            ordered = [e.bringIntoOrder(p) for p in perms]
+            for x in ordered:
+                # Canonicalize the terms
+                y = x.canonicalize()
+
+                # If the canonicalized entry is again the original one,
+                # don't delete unless we antisymmetrized since this means that
+                # T = -T.
+                if str(y)==str(e) and kind == "symmetric":
+                    continue
+
+                try:
+                    id = self.indices.index(y)
+                except:
+                    continue
+                del self.indices[id]
+
+        # Update the symmetry tags
+        for e in self.indices:
+            e.symmetries = e.symmetries + symmetries
+
+    def exchangeSymmetrize(self, symmetries):
+        # PROBLEM: Need proper "basis" since the algorithm does not
+        #   detect terms that, when employing the symmetry freedom to move
+        #   indices around, are the same, i.e. are in the same orbits.
+
+        if symmetries is None:
+            return indices
+
+        if type(symmetries) is list:
+            result = self
+            for sym in symmetries: result = result.exchangeSymmetrize(sym)
+            return result
+
+        if not type(symmetries) is tuple or len(symmetries) != 2:
+            raise Exception("The symmetry must be a tuple with two elements")
+
+        originalIdx, newIdx = symmetries
+
+        if len(originalIdx) != len(newIdx):
+            raise Exception("The index assignments need to have the same length. Given {} and {}".format(originalIdx, newIdx))
+
+        replacement = { a : b for a,b in zip(originalIdx, newIdx) }
+
+        xs = []
+        for e in self.indices:
+            # Replace
+            f = Index([ replacement[x] for x in e.indices ], e.symmetries)
+
+            # Canonicalize f
+            f = f.canonicalize()
+
+            # Before we canonicalize, use the symmetries to bring into standard form
+            #f = f.bringIntoOrder(f.symmetries)
+
+            x = tuple(sorted([e,f], key=lambda x : x.indices)) if e != f else f
+            xs.append(x)
+
+            # canonicalized item is the same
+            #if f == e: continue
+
+            #try:
+            #    id = self.indices.index(f)
+            #except:
+            #    continue
+            #del self.indices[id]
+
+        ys = []
+        for x in xs:
+            if x not in ys: ys.append(x)
+        for i,y in enumerate(xs,1):
+            print("{}: {}".format(i,y))
+        print(len(ys))
+
 
 """
 Symmetrize the index assignments in some indices
