@@ -13,7 +13,7 @@ geometry by the gravitational closure mechanism.
  - [ ] Complete automation from the geometry to the output
  - [ ] Modern technologies: Python 3 + Kubernetes for distributed computing
 
- **Note**: Prime is in VERY early development stage. Its API and design is fluctuating quantum style and its results is as trustable as string theory.
+ **Note**: Prime is in VERY early development stage. Its API and design is still fluctuating quantum style and its results are as trustable as from string theory.
 
 ## Installation
 
