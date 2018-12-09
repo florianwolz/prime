@@ -12,14 +12,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-from prime.input import Field, field, Parametrization
-from prime.input import Parametrization
-from prime.input import Kinematical, kinematical_coefficient
-from prime.input import NormalCoefficient, normal_coefficient
-
-from prime.utils import phis, dirt, dropHigherOrder, constantSymmetricIntertwiner, to_tensor
-from prime.utils import gamma, epsilon, symmetrize
-
-from prime.solve import solve
-
-import prime.output
+from prime.input.field import Field, field
+from prime.input.parametrization import Parametrization
+from prime.input.intertwiners import Intertwiner, InverseIntertwiner
+from prime.input.kinematical import Kinematical, kinematical_coefficient
+from prime.input.normal_coefficient import NormalCoefficient, normal_coefficient

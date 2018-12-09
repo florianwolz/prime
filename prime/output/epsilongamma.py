@@ -12,14 +12,27 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-from prime.input import Field, field, Parametrization
-from prime.input import Parametrization
-from prime.input import Kinematical, kinematical_coefficient
-from prime.input import NormalCoefficient, normal_coefficient
+import numpy as np
 
-from prime.utils import phis, dirt, dropHigherOrder, constantSymmetricIntertwiner, to_tensor
-from prime.utils import gamma, epsilon, symmetrize
+gamma = np.array([[1,0,0],[0,1,0],[0,0,1]])
+epsilon = np.array([
+    [[0,0,0],[0,0,1],[0,-1,0]],
+    [[0,0,-1],[0,0,0],[1,0,0]],
+    [[0,1,0],[-1,0,0],[0,0,0]]
+])
 
-from prime.solve import solve
+def generateEvenRank(indices):
+    t = gamma
+    for i in range(int(len(indices)/2)-1):
+        t = np.tensordot(t, gamma, axes=0)
+    print(t.shape)
+    return t.transpose(tuple(indices))
 
-import prime.output
+def generate(indices):
+    if len(indices) == 0:
+        return np.array(0)
+
+    if len(indices) % 2 == 0:
+        return generateEvenRank(indices)
+    else:
+        raise Exception("Not implemented.")

@@ -15,6 +15,24 @@
 import numpy as np
 import sympy
 
+
+class Symmetry:
+    class SymmetryType:
+        SYMMETRIC = 1
+        ANTISYMMETRIC = 2
+
+    def __init__(self, type, indices, top=False):
+        self.type = type
+        self.indices = indices
+        self.top = top
+
+    def __str__(self):
+        return "<{},{}>".format(self.type, self.indices)
+
+    def __repr__(self):
+        return str(self)
+
+
 class Field:
     """
     Constructor of a field
@@ -45,6 +63,9 @@ class Field:
 
         # Application at zero
         self.onZero = np.vectorize(lambda x : x.subs([(dof,0) for dof in self.dofs]))
+
+        # Find the symmetries of the field
+        self.findSymmetries()
 
     """
     Calculates the tangential coefficient (F)
@@ -85,6 +106,46 @@ class Field:
 
         return F
 
-class FieldRef:
-    def __init__(self, id):
-        self.id = id
+    def __getitem__(self, pos):
+        # Syntactic sugar for scalars
+        if pos == 0 and self.components.shape == tuple(): return self.components
+
+        return self.components[pos]
+
+    def findSymmetries(self):
+        self.symmetries = {}
+
+        # If we do not have at least 2 indices, there is no possible symmetry
+        if len(self.indices) < 2: return
+
+        # Create a list of all the indices
+        idx = list(range(len(self.indices)))
+
+        import itertools
+
+        # Generate all the two-index-combinations of the field
+        combs = itertools.combinations(idx, 2)
+        for c in combs:
+            if np.array_equal(self.components,self.components.swapaxes(*c)):
+                self.symmetries[c] = Symmetry(Symmetry.SymmetryType.SYMMETRIC, c, False)
+            elif np.array_equal(self.components, -self.components.swapaxes(*c)):
+                self.symmetries[c] = Symmetry(Symmetry.SymmetryType.ANTISYMMETRIC, c, False)
+
+
+        # TODO: Generalize to higher order symmetries
+
+
+class field:
+    def __init__(self, indexPositions, weight=0):
+        self.indexPositions = indexPositions
+        self.weight = weight
+
+    def __call__(self, fn):
+        from prime.utils import to_tensor
+        shape = tuple([f[0] for f in self.indexPositions])
+        components = to_tensor(shape=shape)(fn)
+        return Field(
+            components=components,
+            indexPositions=self.indexPositions,
+            weight=self.weight
+        )
