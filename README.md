@@ -1,5 +1,7 @@
 ![logo](https://github.com/florianwolz/prime/raw/master/docs/images/header.png "Prime")
 
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Python 3.6](https://img.shields.io/badge/python-3.6-blue.svg)](https://www.python.org/downloads/release/python-360/)
 [![Build Status](https://travis-ci.org/florianwolz/prime.png?branch=master)](https://travis-ci.org/florianwolz/prime)
 
 Prime is a python package that allows to derive the weak field Lagrangians of any
