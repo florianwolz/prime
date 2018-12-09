@@ -19,7 +19,7 @@ from prime.output.indices import generateEvenRank, generateOddRank
 symbols = ["lambda", "xi", "theta", "chi", "omega"]
 
 
-class OutputCoefficient:
+class ConstantOutputCoefficient:
     def __init__(self, parametrization, J, order, derivs=None, symbol=None):
         # Store the variables
         self.parametrization = parametrization
@@ -122,7 +122,7 @@ def all_coefficients_of_order(parametrization, J, order, maxOrder, collapse=2, s
         derivs = derivs + sorted(list(set([tuple(sorted(list(d))) for d in derivs_])))
 
     # Return the output coeffcieints
-    return [OutputCoefficient(parametrization, J, order, list(d), symbol) for d in derivs]
+    return [ConstantOutputCoefficient(parametrization, J, order, list(d), symbol) for d in derivs]
 
 
 def all_coefficients(parametrization, J, order, collapse=2):
