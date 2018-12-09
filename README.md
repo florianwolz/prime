@@ -1,4 +1,4 @@
-![logo](https://github.com/florianwolz/prime/docs/images/header.png "Prime")
+![logo](https://github.com/florianwolz/prime/raw/master/docs/images/header.png "Prime")
 
 [![Build Status](https://travis-ci.org/florianwolz/prime.png?branch=master)](https://travis-ci.org/florianwolz/prime)
 
