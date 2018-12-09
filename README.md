@@ -13,6 +13,8 @@ geometry by the gravitational closure mechanism.
  - [ ] Complete automation from the geometry to the output
  - [ ] Modern technologies: Python 3 + Kubernetes for distributed computing
 
+ **Note**: Prime is in VERY early development stage. Its API and design is fluctuating quantum style and its results is as trustable as string theory.
+
 ## Installation
 
 ```sh
@@ -20,6 +22,42 @@ $ git clone https://github.com/florianwolz/prime
 $ cd prime
 $ pip install -r requirements.txt
 ```
+
+## Input scripts
+
+Prime is configured with the help of a Python input script. Before explaining
+the several steps, let's start with an example:
+
+```python
+import prime
+from sympy import sqrt
+
+# Setup the list of the six degrees of freedom
+phis = prime.phis(6)
+
+# Setup the (pulled-back) metric
+g = prime.Field([[-1 + phis[0], phis[1], phis[2]],
+                 [phis[1], -1 + phis[3], phis[4]],
+                 [phis[2], phis[4], -1 + phis[5]]], [1, 1])
+
+# Setup the parametrization
+param = prime.Parametrization(fields=[g])
+
+# Setup the kinematical coefficient
+P = prime.Kinematical(param, components=g.components, degP=2)
+
+# Solve
+prime.solve(
+    parametrization=param,
+    kinematical_coefficient=P,
+
+    # Linear equations of motion
+    order=1
+)
+```
+
+Executing this script will give the perturbative expansion of the Einstein-Hilbert
+action to second order.
 
 # Advanced topics
 
