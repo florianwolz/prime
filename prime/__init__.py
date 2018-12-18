@@ -22,4 +22,7 @@ from prime.utils import gamma, epsilon, symmetrize
 
 from prime.solve import solve
 
+import prime.cli
 import prime.output
+
+from prime.cli import main

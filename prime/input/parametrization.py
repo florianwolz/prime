@@ -29,7 +29,15 @@ def jet_variables(phi, order):
 
     from itertools import product
     idx = list(sorted(list(product(*[list(range(0,3)) for _ in range(order)]))))
-    return ["{}_{}".format(phi, "".join(reversed([chr(ord('x') + e) for e in i]))) for i in idx]
+    return ["{}_{}".format(phi, "".join(sorted([chr(ord('x') + e) for e in i]))) for i in idx]
+
+
+def dPhis(phis, order):
+    if order == 0: return np.array(phis)
+    from itertools import product
+    comps = product(list(range(len(phis))), *[(0,1,2) for i in range(order)])
+    l = ["{}_{}".format(phis[c[0]], "".join(sorted([chr(ord('x') + e) for e in c[1:]]))) for c in comps]
+    return np.reshape(l, (len(phis),) + tuple([3 for i in range(order)]))
 
 
 def sympy_derivative(term, dofs, replacements):
@@ -153,4 +161,4 @@ class Parametrization:
         res = self.dofs
         for i in range(order-1):
             res = [x*y for x in res for y in self.dofs]
-        return O(res, *self.dofs)
+        return O(sum(res), *self.dofs)
