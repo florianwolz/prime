@@ -17,8 +17,8 @@ from prime.input import Parametrization
 from prime.input import Kinematical, kinematical_coefficient
 from prime.input import NormalCoefficient, normal_coefficient
 
-from prime.utils import phis, dirt, dropHigherOrder, constantSymmetricIntertwiner, to_tensor
-from prime.utils import gamma, epsilon, symmetrize
+from prime.utils import phis, dirt, dropHigherOrder, constantSymmetricIntertwiner, constantSymmetricTracelessIntertwiner, to_tensor
+from prime.utils import gamma, epsilon, symmetrize, sqrt, det
 
 from prime.solve import solve
 

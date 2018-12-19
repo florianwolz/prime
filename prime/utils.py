@@ -83,14 +83,25 @@ def dropHigherOrder(expr, phis, order):
 def constantSymmetricIntertwiner():
     from sympy import sqrt
 
-    return [
+    return np.array([
         [[1,0,0],[0,0,0],[0,0,0]],
         [[0,1/sqrt(2),0],[1/sqrt(2),0,0],[0,0,0]],
         [[0,0,1/sqrt(2)],[0,0,0],[1/sqrt(2),0,0]],
         [[0,0,0],[0,1,0],[0,0,0]],
         [[0,0,0],[0,0,1/sqrt(2)],[0,1/sqrt(2),0]],
         [[0,0,0],[0,0,0],[0,0,1]]
-    ]
+    ])
+
+def constantSymmetricTracelessIntertwiner():
+    from sympy import sqrt
+
+    return np.array([
+        [[1/sqrt(2),0,0],[0,-1/sqrt(2),0],[0,0,0]],
+        [[1/sqrt(6),0,0],[0,1/sqrt(6),0],[0,0,-2/sqrt(6)]],
+        [[0,1/sqrt(2),0],[1/sqrt(2),0,0],[0,0,0]],
+        [[0,0,0],[0,0,1/sqrt(2)],[0,1/sqrt(2),0]],
+        [[0,0,1/sqrt(2)],[0,0,0],[1/sqrt(2),0,0]],
+    ])
 
 
 def tensorFromFn(fn, shape):
@@ -130,3 +141,25 @@ def dirt(phis, order=1):
     for i in range(order):
         result = [i*p for i in result for p in phis]
     return Order(sum(result))
+
+
+def det(matrix):
+    if type(matrix) is np.ndarray:
+        return np.linalg.det(matrix)
+    
+    if not hasattr(matrix, "components"):
+        raise Exception("Cannot calculate the determinant of object of class {}".format(type(matrix)))
+    
+    shape = matrix.components.shape
+    if shape != (3,3):
+        raise Exception("Cannot calculate the determinant of matrix of shape {}")
+    
+    M = matrix.components
+    return M[0,0] * M[1,1] * M[2,2] - M[2,0] * M[1,1] * M[0,2] + \
+           M[0,1] * M[1,2] * M[2,0] - M[2,1] * M[1,2] * M[0,0] + \
+           M[0,2] * M[1,0] * M[2,1] - M[2,2] * M[1,0] * M[0,1]
+
+
+def sqrt(expr):
+    from sympy import sqrt
+    return sqrt(expr)
