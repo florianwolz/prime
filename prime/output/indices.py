@@ -117,7 +117,7 @@ class Index:
         else:
             a = list(sorted(self.indices[0:3]))
             b = Index(indices=self.indices[3:]).canonicalize()
-            indices = a + b.indices
+            indices = a if b == 0 else a + b.indices
             return Index(indices=indices, symmetries=self.symmetries)
 
     """
@@ -147,6 +147,17 @@ class Index:
 
     def rank(self):
         return len(self.indices)
+    
+    def blocks(self):
+        blocks = []
+        if self.rank() % 2 == 1:
+            blocks = [tuple(self.indices[0:3])]
+            for i in range(3, self.rank(), 2):
+                blocks.append((self.indices[i], self.indices[i+1]))
+        else:
+            for i in range(0, self.rank(), 2):
+                blocks.append((self.indices[i], self.indices[i+1]))
+        return blocks
 
     def __str__(self):
         return "".join([chr(ord('a') + i) for i in self.indices])
@@ -273,6 +284,12 @@ class Indices:
         for i,y in enumerate(xs,1):
             print("{}: {}".format(i,y))
         print(len(ys))
+    
+    def __str__(self):
+        return "<{}, ({})".format(len(self.indices), ", ".join([str(i) for i in self.indices]))
+    
+    def __repr__(self):
+        return str(self)
 
 
 """

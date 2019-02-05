@@ -36,8 +36,18 @@ def symmetrize(tensor, indices):
     # Generate all the permutations of the indices
     perms = list(itertools.permutations(indices))
 
-    # Turn the permutations into index shapes
-    shapes = [tuple([perm[i] if i in indices else i for i in range(len(tensor.shape))]) for perm in perms]
+    # Turn them into index shapes
+    shapes = []
+    for perm in perms:
+        shape = []
+        pos = 0
+        for i in range(len(tensor.shape)):
+            if not i in indices:
+                shape.append(i)
+            else:
+                shape.append(perm[pos])
+                pos = pos + 1
+        shapes.append(tuple(shape))
 
     # Add the different permutations of the tensor
     result = np.zeros(tensor.shape)
@@ -163,3 +173,18 @@ def det(matrix):
 def sqrt(expr):
     from sympy import sqrt
     return sqrt(expr)
+
+
+def binomial(N, K):
+    if K == 0: return 1
+    if 2*K > N: K = N-K
+    result = 1
+    for i in range(1, K+1):
+        result = result * (N-K+i)/i
+    return int(result)
+
+
+def factorial(N):
+    if N==0: return 1
+    elif N==1: return 1
+    else: return N*factorial(N-1)

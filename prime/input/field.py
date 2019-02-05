@@ -27,7 +27,7 @@ class Symmetry:
         self.top = top
 
     def __str__(self):
-        return "<{},{}>".format(self.type, self.indices)
+        return "<{},{}>".format("symmetric" if self.type == Symmetry.SymmetryType.SYMMETRIC else "antisymmetric", self.indices)
 
     def __repr__(self):
         return str(self)

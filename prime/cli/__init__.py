@@ -16,8 +16,6 @@ def main(local):
 @main.command()
 @click.argument("input", nargs=1)
 def solve(input):
-    print(os.getcwd())
-
     # Read the script file
     script = None
     with open(input, "rb") as f:
