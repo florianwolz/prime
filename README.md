@@ -22,8 +22,8 @@ geometry by the gravitational closure mechanism.
  - [x] Calculation of the remaining input coefficients (E, F)
  - [x] Perturbative expansion of the input coefficients
  - [x] Generation of a list of all perturbative output coefficients
- - [ ] Generation of the basis terms of the perturbative output coefficients
- - [ ] Collecting all perturbative output coefficients into the polynomial in the degrees of freedom
+ - [x] Generation of the basis terms of the perturbative output coefficients
+ - [x] Collecting all perturbative output coefficients into the polynomial in the degrees of freedom
  - [ ] Writing classes for all closure equations
  - [ ] Plugging all coefficients into the closure equations
  - [ ] Solving them
