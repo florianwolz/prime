@@ -47,7 +47,7 @@ def formal_derivative_of_symbol(symbol, direction, independentVariables=['x','y'
     if len(splitted) == 1: return Symbol("{}_{}".format(symbolStr, direction))
 
     # Build the multi index
-    multiIndex = sorted([independentVariables.index(i) for i in splitted[1] + [direction]])
+    multiIndex = sorted([independentVariables.index(i) for i in splitted[1] + direction])
     result = [independentVariables[i] for i in multiIndex]
     return Symbol("{}_{}".format(splitted[0], "".join(result)))
 
@@ -202,32 +202,32 @@ def spatial_diff(expr, direction=None, order=None):
         elif order == 1:
             return spatial_diff(expr=expr, direction=direction)
         else:
-            return spatial_diff(expr=spatial_diff(expr, direction=direction), direction=direction, order=order-1)
+            return np.array(spatial_diff(expr=spatial_diff(expr, direction=direction).tolist(), direction=direction, order=order-1))
 
     # No direction? Return the vector x,y,z
     if direction is None:
-        return np.array([spatial_diff(expr, d) for d in ['x','y','z']])
+        return np.array([spatial_diff(expr, direction=d).tolist() for d in ['x','y','z']])
 
     # Also allow for lists
     if type(expr) is list:
-        return np.array([spatial_diff(e, direction) for e in expr])
+        return np.array([spatial_diff(e, direction).tolist() for e in expr])
 
     # Also applicable for numpy arrays
     if type(expr) is np.ndarray:
-        tmp = np.vectorize(lambda x : np.array(spatial_diff(x, direction)))
+        tmp = np.vectorize(lambda x : np.array(spatial_diff(x, direction).tolist()))
         return tmp(expr)
 
     # If there is a big O present, treat it separately
     if expr.getO() is not None:
-        expr1 = spatial_diff(expr.removeO(), direction)
-        expr2 = spatial_diff(expr.getO().expr, direction)
+        expr1 = spatial_diff(expr.removeO(), direction).tolist()
+        expr2 = spatial_diff(expr.getO().expr, direction).tolist()
         return np.array([a+O(b) for a,b in zip(expr1, expr2)])
 
     # Get all the symbols
     syms = [s for s in expr.free_symbols if s not in ['x', 'y', 'z']]
 
     # Handle explicit x, y, z dependency
-    result = diff(expr, Symbol(dir))
+    result = diff(expr, Symbol(direction))
 
     # Add all the chain rule terms
     for s in syms:
@@ -261,16 +261,16 @@ class jet_diff(object):
 
             # Apply the derivative into all directions
             # TODO: Get rid of duplicate calculations
-            l = np.vectorize(lambda x : self(expr, direction=x, order=None))
+            l = np.vectorize(lambda x : self(expr, direction=x, order=None).tolist())
             diffs = np.array(l(vars).tolist())
 
             # The derivative indices are now the first ones. Move them to the back.
-            return diffs.reshape(tuple(range(len(shape), len(diffs))) + tuple(range(len(shape))))
+            return diffs.transpose(tuple(range(len(shape), len(diffs.shape))) + tuple(range(len(shape))))
 
         # Check if direction is a proper jet variable
         if __debug__:
-            v = direction.split("_")
-            if v not in self.dofs: raise Exception("Invalid direction.")
+            v = str(direction).split("_")
+            if Symbol(v[0]) not in self.dofs: raise Exception("Invalid direction.")
             if len(v) == 2:
                 for d in v[1]:
                     if d not in ['x', 'y', 'z']:
@@ -278,11 +278,11 @@ class jet_diff(object):
 
         # Also allow for lists
         if type(expr) is list:
-            return np.array([self(e, direction=direction) for e in expr])
+            return np.array([self(e, direction=direction).tolist() for e in expr])
 
         # Also applicable for numpy arrays
         if type(expr) is np.ndarray:
-            tmp = np.vectorize(lambda x : np.array(self(x, direction=direction)))
+            tmp = np.vectorize(lambda x : self(x, direction=direction).tolist())
             return tmp(expr)
         
         return np.array(diff(expr, direction))
