@@ -1,2 +1,6 @@
 /venv
 __pycache__/
+Prime.egg-info/
+.DS_Store
+.vscode/
+dask-worker-space/

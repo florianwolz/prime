@@ -27,7 +27,7 @@ class Symmetry:
         self.top = top
 
     def __str__(self):
-        return "<{},{}>".format(self.type, self.indices)
+        return "<{},{}>".format("symmetric" if self.type == Symmetry.SymmetryType.SYMMETRIC else "antisymmetric", self.indices)
 
     def __repr__(self):
         return str(self)
@@ -143,9 +143,10 @@ class field:
     def __call__(self, fn):
         from prime.utils import to_tensor
         shape = tuple([f[0] for f in self.indexPositions])
+        positions = [f[1] for f in self.indexPositions]
         components = to_tensor(shape=shape)(fn)
         return Field(
             components=components,
-            indexPositions=self.indexPositions,
+            indexPositions=positions,
             weight=self.weight
         )

@@ -19,10 +19,16 @@ def generateTwoPartition(indices):
 
     first = indices[0]
     for i, e in enumerate(indices[1:]):
-        gammas.append([first, e])
-        remainings.append([x for j, x in enumerate(indices[1:]) if i != j])
+        gammas.append((first, e))
+        remainings.append(tuple([x for j, x in enumerate(indices[1:]) if i != j]))
 
     return gammas, remainings
+
+
+def generateThreePartitions(indices):
+    from itertools import combinations
+    for part in combinations(indices, 3):
+        yield part, tuple([i for i in indices if i not in part])
 
 
 """
@@ -35,19 +41,33 @@ def generateEvenRank(indices):
     gammas, remainings = generateTwoPartition(indices)
 
     if len(indices) == 2:
-        return gammas
-
-    result = []
-    for gamma, remaining in zip(gammas, remainings):
-        newComb = generateEvenRank(remaining)
-        for v in newComb:
-            result.append(gamma + v)
-    return result
+        for gamma in gammas:
+            yield gamma
+    else:
+        for gamma, remaining in zip(gammas, remainings):
+            for v in generateEvenRank(remaining):
+                yield gamma + tuple(v)
 
 
-# TODO: Odd rank
 def generateOddRank(indices):
-    raise Expception("Unimplemented.")
+    parts = generateThreePartitions(indices)
+
+    for epsilon, rest in parts:
+        if len(rest) == 0:
+            yield epsilon
+        else:
+            l = generateEvenRank(rest)
+            for x in l:
+                yield epsilon + tuple(x)
+
+
+def generateIndices(indices):
+    if len(indices) < 2:
+        return []
+    elif len(indices) % 2 == 0:
+        return generateEvenRank(indices)
+    else:
+        return generateOddRank(indices)
 
 
 def bringListIntoOrder(l, elements):
@@ -97,7 +117,7 @@ class Index:
         else:
             a = list(sorted(self.indices[0:3]))
             b = Index(indices=self.indices[3:]).canonicalize()
-            indices = a + b.indices
+            indices = a if b == 0 else a + b.indices
             return Index(indices=indices, symmetries=self.symmetries)
 
     """
@@ -127,6 +147,17 @@ class Index:
 
     def rank(self):
         return len(self.indices)
+    
+    def blocks(self):
+        blocks = []
+        if self.rank() % 2 == 1:
+            blocks = [tuple(self.indices[0:3])]
+            for i in range(3, self.rank(), 2):
+                blocks.append((self.indices[i], self.indices[i+1]))
+        else:
+            for i in range(0, self.rank(), 2):
+                blocks.append((self.indices[i], self.indices[i+1]))
+        return blocks
 
     def __str__(self):
         return "".join([chr(ord('a') + i) for i in self.indices])
@@ -141,15 +172,15 @@ class Index:
 class Indices:
     def __init__(self, rank):
         self.rank = rank
-        self.indices = [Index(idx) for idx in generateEvenRank(list(range(rank)))]
+        self.indices = [Index(idx) for idx in generateIndices(list(range(rank)))]
 
     def symmetrize(self, symmetries, kind="symmetric"):
         # Antisymmetrization is not so well, tested so throw for now
         if kind == "antisymmetric":
-            raise Exception("Antisymmetrization support is still shaky.")
+            return self.indices
 
         if symmetries is None:
-            return indices
+            return self.indices
 
         if type(symmetries) is not list:
             symmetries = [symmetries]
@@ -161,6 +192,19 @@ class Indices:
 
         # Prepare result
         from itertools import permutations, product
+
+        # Check if there is a symmetrization on epsilons
+        result = []
+        for e in self.indices:
+            # If there is a symmetrization on epsilon terms, get rid of them
+            if len(e.indices) % 2 == 1 and kind=="symmetric":
+                s = [len([x for x in sym if x in e.indices[0:3]]) for sym in symmetries]
+                s = [x for x in s if x>1]
+                if len(s) == 0:
+                    result.append(e)
+            else:
+                result.append(e)
+        self.indices = result
 
         for e in self.indices:
             # Generate all the possible index permutations of the symmetries
@@ -186,6 +230,7 @@ class Indices:
         # Update the symmetry tags
         for e in self.indices:
             e.symmetries = e.symmetries + symmetries
+        
 
     def exchangeSymmetrize(self, symmetries):
         # PROBLEM: Need proper "basis" since the algorithm does not
@@ -193,7 +238,7 @@ class Indices:
         #   indices around, are the same, i.e. are in the same orbits.
 
         if symmetries is None:
-            return indices
+            return self.indices
 
         if type(symmetries) is list:
             result = self
@@ -239,6 +284,12 @@ class Indices:
         for i,y in enumerate(xs,1):
             print("{}: {}".format(i,y))
         print(len(ys))
+    
+    def __str__(self):
+        return "<{}, ({})".format(len(self.indices), ", ".join([str(i) for i in self.indices]))
+    
+    def __repr__(self):
+        return str(self)
 
 
 """
@@ -275,6 +326,15 @@ def symmetrize(indices, symmetries=None, kind="symmetric"):
     from itertools import permutations, product
 
     for e in result:
+        # Check for conflict with another symmetry
+        if kind=="antisymmetric":
+            pass
+        elif kind=="symmetric":
+            # Symmetrization on one of the epsilon indices?
+            if len(e) % 2 == 1:
+                s = [len([x for x in sym if x <= 2]) for sym in symmetries]
+                if len(s) > 0: continue
+
         # Generate all the possible index permutations of the symmetries
         perms = list(product(*[list(permutations(tuple(sym))) for sym in symmetries]))
         perms = [list(e) for e in perms]

@@ -36,6 +36,12 @@ class Kinematical(Tensor):
 
         # Initialize
         Tensor.__init__(self, components, [(3,1), (3,1)])
+        
+    def __getitem__(self, pos):
+        # Syntactic sugar for scalars
+        if pos == 0 and self.components.shape == tuple(): return self.components
+
+        return self.components[pos]
 
 
 """

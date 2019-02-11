@@ -22,10 +22,10 @@ geometry by the gravitational closure mechanism.
  - [x] Calculation of the remaining input coefficients (E, F)
  - [x] Perturbative expansion of the input coefficients
  - [x] Generation of a list of all perturbative output coefficients
- - [ ] Generation of the basis terms of the perturbative output coefficients
- - [ ] Collecting all perturbative output coefficients into the polynomial in the degrees of freedom
- - [ ] Writing classes for all closure equations
- - [ ] Plugging all coefficients into the closure equations
+ - [x] Generation of the basis terms of the perturbative output coefficients
+ - [x] Collecting all perturbative output coefficients into the polynomial in the degrees of freedom
+ - [X] Writing classes for all closure equations
+ - [X] Plugging all coefficients into the closure equations
  - [ ] Solving them
  - [ ] Fancy output of the whole Lagrangian
 
@@ -35,7 +35,17 @@ geometry by the gravitational closure mechanism.
 $ git clone https://github.com/florianwolz/prime
 $ cd prime
 $ pip install -r requirements.txt
+$ pip install .
 ```
+
+## Usage
+
+```sh
+$ prime solve examples/metric.py
+```
+
+Prime ships with a command line interface. With the `solve`command you can solve an
+input script for a specific geometry.
 
 ## Input scripts
 
@@ -72,6 +82,19 @@ prime.solve(
 
 Executing this script will give the perturbative expansion of the Einstein-Hilbert
 action to second order.
+
+All input scripts have more or less the same structure. It starts with the inclusion
+of the prime module and then one uses `prime.phis(N)` to get an array with the degrees
+of freedom properly setup.
+This is followed by the geometric fields in terms of the degrees of freedom, either by
+using the `prime.Field` class - or for complicated parametrizations in functional form 
+with the help of the `prime.field` decorator. Then the parametrization can be setup.
+
+Lastly, one enters the kinematical coefficient P and the normal deformation coefficient M
+and starts the solving process by calling `prime.solve`.
+
+For further examples take a look into the `examples/` directory, where the input scripts for
+a bi-metric theory and an area metric are provided.
 
 # Advanced topics
 

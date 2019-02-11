@@ -12,6 +12,6 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-from prime.output.output_coefficient import ConstantOutputCoefficient, all_coefficients_of_order, all_coefficients
-from prime.output.indices import generateEvenRank, symmetrize, antisymmetrize, blocksymmetrize, indexToString, Index, Indices
+from prime.output.output_coefficient import ConstantOutputCoefficient, all_coefficients
+from prime.output.indices import generateIndices, symmetrize, antisymmetrize, blocksymmetrize, indexToString, Index, Indices
 from prime.output.epsilongamma import generate

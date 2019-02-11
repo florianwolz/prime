@@ -36,8 +36,18 @@ def symmetrize(tensor, indices):
     # Generate all the permutations of the indices
     perms = list(itertools.permutations(indices))
 
-    # Turn the permutations into index shapes
-    shapes = [tuple([perm[i] if i in indices else i for i in range(len(tensor.shape))]) for perm in perms]
+    # Turn them into index shapes
+    shapes = []
+    for perm in perms:
+        shape = []
+        pos = 0
+        for i in range(len(tensor.shape)):
+            if not i in indices:
+                shape.append(i)
+            else:
+                shape.append(perm[pos])
+                pos = pos + 1
+        shapes.append(tuple(shape))
 
     # Add the different permutations of the tensor
     result = np.zeros(tensor.shape)
@@ -83,14 +93,25 @@ def dropHigherOrder(expr, phis, order):
 def constantSymmetricIntertwiner():
     from sympy import sqrt
 
-    return [
+    return np.array([
         [[1,0,0],[0,0,0],[0,0,0]],
         [[0,1/sqrt(2),0],[1/sqrt(2),0,0],[0,0,0]],
         [[0,0,1/sqrt(2)],[0,0,0],[1/sqrt(2),0,0]],
         [[0,0,0],[0,1,0],[0,0,0]],
         [[0,0,0],[0,0,1/sqrt(2)],[0,1/sqrt(2),0]],
         [[0,0,0],[0,0,0],[0,0,1]]
-    ]
+    ])
+
+def constantSymmetricTracelessIntertwiner():
+    from sympy import sqrt
+
+    return np.array([
+        [[1/sqrt(2),0,0],[0,-1/sqrt(2),0],[0,0,0]],
+        [[1/sqrt(6),0,0],[0,1/sqrt(6),0],[0,0,-2/sqrt(6)]],
+        [[0,1/sqrt(2),0],[1/sqrt(2),0,0],[0,0,0]],
+        [[0,0,0],[0,0,1/sqrt(2)],[0,1/sqrt(2),0]],
+        [[0,0,1/sqrt(2)],[0,0,0],[1/sqrt(2),0,0]],
+    ])
 
 
 def tensorFromFn(fn, shape):
@@ -130,3 +151,40 @@ def dirt(phis, order=1):
     for i in range(order):
         result = [i*p for i in result for p in phis]
     return Order(sum(result))
+
+
+def det(matrix):
+    if type(matrix) is np.ndarray:
+        return np.linalg.det(matrix)
+    
+    if not hasattr(matrix, "components"):
+        raise Exception("Cannot calculate the determinant of object of class {}".format(type(matrix)))
+    
+    shape = matrix.components.shape
+    if shape != (3,3):
+        raise Exception("Cannot calculate the determinant of matrix of shape {}")
+    
+    M = matrix.components
+    return M[0,0] * M[1,1] * M[2,2] - M[2,0] * M[1,1] * M[0,2] + \
+           M[0,1] * M[1,2] * M[2,0] - M[2,1] * M[1,2] * M[0,0] + \
+           M[0,2] * M[1,0] * M[2,1] - M[2,2] * M[1,0] * M[0,1]
+
+
+def sqrt(expr):
+    from sympy import sqrt
+    return sqrt(expr)
+
+
+def binomial(N, K):
+    if K == 0: return 1
+    if 2*K > N: K = N-K
+    result = 1
+    for i in range(1, K+1):
+        result = result * (N-K+i)/i
+    return int(result)
+
+
+def factorial(N):
+    if N==0: return 1
+    elif N==1: return 1
+    else: return N*factorial(N-1)
