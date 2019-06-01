@@ -15,7 +15,7 @@
 import numpy as np
 from prime.equations.equation import SequenceEquation, F, SpatialN, Collapse
 from prime.input.parametrization import spatial_diff
-from prime.utils import symmetrize, binom
+from prime.utils import symmetrize, binomial
 
 class C19(SequenceEquation):
     shape = (F, SpatialN, 3)

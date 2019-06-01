@@ -24,24 +24,24 @@ from prime.equations.C7 import C7
 # Import the sequence equations
 from prime.equations.C8 import C8
 from prime.equations.C9 import C9
-#from prime.equations.C10 import C10
-#from prime.equations.C11 import C11
-#from prime.equations.C12 import C12
-#from prime.equations.C13 import C13
-#from prime.equations.C14 import C14
-#from prime.equations.C15 import C15
-#from prime.equations.C16 import C16
-#from prime.equations.C17 import C17
-#from prime.equations.C18 import C18
-#from prime.equations.C19 import C19
-#from prime.equations.C20 import C20
-#from prime.equations.C21 import C21
+from prime.equations.C10 import C10
+from prime.equations.C11 import C11
+from prime.equations.C12 import C12
+from prime.equations.C13 import C13
+from prime.equations.C14 import C14
+from prime.equations.C15 import C15
+from prime.equations.C16 import C16
+from prime.equations.C17 import C17
+from prime.equations.C18 import C18
+from prime.equations.C19 import C19
+from prime.equations.C20 import C20
+from prime.equations.C21 import C21
 
 # Load all the equations into a list
 equations = [
     C1, C2, C3, C4, C5, C6, C7,
-    C8, C9#, C10, C11, C12, C13, C14, C15, C16, C17, C18, C19, C20, C21
+    C8, C9, C10, C11, C12, C13, C14, C15, C16, C17, C18, C19, C20, C21
 ] 
 
-def allEqns(Cs, E, F, M, p, order):
-    return [eq(Cs=Cs, E=E, F=F, M=M, p=p, order=order) for eq in equations]
+def allEqns(Cs, E, F, M, p, degP, order):
+    return [eq(Cs=Cs, E=E, F=F, M=M, p=p, degP=degP, order=order) for eq in equations]

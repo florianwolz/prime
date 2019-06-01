@@ -4,3 +4,4 @@ Prime.egg-info/
 .DS_Store
 .vscode/
 dask-worker-space/
+*.pyc

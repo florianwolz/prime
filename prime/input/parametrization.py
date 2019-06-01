@@ -12,8 +12,9 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-from sympy import Symbol, diff, Function, symbols, O, sympify
+from sympy import Symbol, diff, Function, symbols, O, sympify, Add
 import numpy as np
+from prime.utils import memoize
 
 from .field import Field
 
@@ -28,8 +29,8 @@ def jet_variables(phi, order):
     if order == 0: return [str(phi)]
 
     from itertools import product
-    idx = list(sorted(list(product(*[list(range(0,3)) for _ in range(order)]))))
-    return ["{}_{}".format(phi, "".join(sorted([chr(ord('x') + e) for e in i]))) for i in idx]
+    idx = list(sorted(set(product(*[list(range(0,3)) for _ in range(order)]))))
+    return list(set(["{}_{}".format(phi, "".join(sorted([chr(ord('x') + e) for e in i]))) for i in idx]))
 
 
 def formal_derivative_of_symbol(symbol, direction, independentVariables=['x','y','z']):
@@ -112,6 +113,8 @@ class Parametrization:
         # Create a cache for the normal deformation coefficient
         self._M = None
 
+        self._OdiffMemo = {}
+
     def evaluate(self, expr):
         return self._onZero(expr)
 
@@ -178,10 +181,31 @@ class Parametrization:
 
 
     def O(self, order):
+        if order==0: return O(1)
         res = self.dofs
         for i in range(order-1):
             res = [x*y for x in res for y in self.dofs]
-        return O(sum(res), *self.dofs)
+        return O(Add(*res), *self.dofs)
+    
+
+    def Odiff(self, order, collapse=2):
+        if (order, collapse) in self._OdiffMemo: return self._OdiffMemo[(order, collapse)]
+
+        if order==0: return O(1)
+        z = [Symbol(x) for i in range(0, collapse+1) for x in jet_variables(self.dofs, i)]
+        res = z
+        for i in range(order-1):
+            res = [x*y for x in res for y in z]
+        
+        summed = Add(*res)
+
+        result = O(summed, *z)
+        #return summed
+
+        self._OdiffMemo[(order, collapse)] = result
+
+        #return Add(*res)
+        return result
 
 
 """

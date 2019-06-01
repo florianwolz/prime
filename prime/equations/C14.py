@@ -15,7 +15,7 @@
 import numpy as np
 from prime.equations.equation import SequenceEquation, FN, SpatialN, MaxOrder
 from prime.input.parametrization import spatial_diff
-from prime.utils import symmetrize, binom
+from prime.utils import symmetrize, binomial
 
 class C14(SequenceEquation):
     shape = (FN-1, 3,3)

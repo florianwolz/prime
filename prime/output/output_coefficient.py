@@ -20,7 +20,7 @@ from prime.input.field import Symmetry
 
 import coloredlogs, logging
 
-from dask.distributed import get_client, secede, rejoin
+#from dask.distributed import get_client, secede, rejoin
 
 # Symbols
 symbols = ["lambda", "xi", "theta", "chi", "omega"]
@@ -57,6 +57,59 @@ def randomName(length=3):
     return "".join([chr(ord('a') + random.randint(0, 25)) for i in range(length)])
 
 
+greekAlphabet = ["\\alpha", "\\beta", "\\gamma", "\\delta", "\\epsilon", 
+                 "\\zeta", "\\eta", "\\theta", "\\iota", "\\kappa",
+                 "\\lambda", "\\mu", "\\nu", "\\xi", "\\pi", "\\rho",
+                 "\\sigma", "\\tau", "\\varphi", "\\chi", "\\psi", "\\omega"]
+
+
+def intertwinerToTeX(Findex, indices, field=0, fields=1, offsetF=0, offset=0):
+    result = "\\mathcal{I}"
+        
+    if fields > 1:
+        result += "^{(" + str(field+1) + ")}"
+    
+    result = result + "_" + \
+        chr(ord('A')+ Findex + offsetF) + \
+        "{}_{"
+
+    for i in indices:
+        result += greekAlphabet[i + offset]
+
+    result += "}"
+    return result
+
+
+def epsilonGammaToTeX(indices, offset=0):
+    if len(indices) == 0 or len(indices) == 1: return "0"
+    elif len(indices) % 2 == 0:
+        result = ""
+        for i in range(0,len(indices),2):
+            result += "\gamma^{" + \
+                greekAlphabet[indices[i] + offset] + \
+                greekAlphabet[indices[i+1] + offset] + \
+                "}"
+        return result
+    else:
+        result = "\\varepsilon^{" + \
+                greekAlphabet[indices[0] + offset] + \
+                greekAlphabet[indices[1] + offset] + \
+                greekAlphabet[indices[2] + offset] + \
+                "}"
+        if len(indices) == 3: return result
+        return result + epsilonGammaToTeX(indices[3:], offset)
+
+
+def phisToLaTeX(index, derivIndices=[]):
+    result = "\\varphi^{" + chr(ord('A') + index) + "}"
+    if len(derivIndices) == 0: return result
+    result += "{}_{,"
+    for i in derivIndices:
+        result += greekAlphabet[i]
+    result += "}"
+    return result
+
+        
 """
 VelocityContraction
 
@@ -759,6 +812,55 @@ class ConstantOutputCoefficient:
                     result = (result + result.transpose(shape)) / 2
 
         return result
+    
+
+    def toLaTeX(self, substitutions={}):
+        lines = []
+
+        # Fix all substitutions if necessary:
+        for k in self.variableMap:
+            if k not in substitutions:
+                substitutions[k] = k
+
+        for k, v in self.variableMap.items():
+            epsilonGamma = epsilonGammaToTeX(v[1].indices)
+            phiTerms = ""
+            intTerms = ""
+
+            # Get the substituted value
+            key = substitutions[k]
+
+            # Ignore all terms that are nulled by the substitions
+            if key == 0: continue
+
+            # Put the key in brackets, if necessary
+            key = str(key)
+            if "+" in key or "-" in key:
+                key = "(" + key + ")"
+
+            # The K terms
+            Aoffset = 0
+            if len(v[0][0]) > 0:
+                for K in v[0][0]:
+                    intTerms += intertwinerToTeX(Aoffset, K.getIndices(), field=K.id, fields=len(self.J.components))
+                    Aoffset += 1
+                intTerms += " "
+
+            # The Phi terms
+            if len(v[0][1]) > 0:
+                phiTerms += " "
+                for Phi in v[0][1]:
+                    intTerms += intertwinerToTeX(Aoffset, Phi.getIndices(), field=Phi.id, fields=len(self.J.components))
+                    phiTerms += phisToLaTeX(Aoffset, Phi.getDerivativeIndices())
+                    Aoffset += 1
+                intTerms += " "
+
+            lines.append("{} * {}{}{}".format(key, intTerms, epsilonGamma, phiTerms))
+
+        # No terms left after substitutions => return 0
+        if len(lines) == 0: return "0"
+
+        return " +\n".join(lines)
 
 
     def generate(self):
@@ -772,16 +874,17 @@ class ConstantOutputCoefficient:
         basisTensors = [self.generateBasisTensor(*args) for args in zip(contractions, tensorShapes)]
 
         # Contract the tensors with the epsilon-gamma terms and flatten the list
-        contractedBasisTensors = [(contractions[i], self.generateContractedBasisTensor(contractions[i], tensorShapes[i], b)) for i in range(len(contractions)) for b in basisTensors[i].indices]
-        contractedBasisTensors = [x for x in contractedBasisTensors if x[1] is not None]
+        contractedBasisTensors = [(contractions[i], b, self.generateContractedBasisTensor(contractions[i], tensorShapes[i], b)) for i in range(len(contractions)) for b in basisTensors[i].indices]
+        contractedBasisTensors = [x for x in contractedBasisTensors if x[2] is not None]
 
         # No contraction?
         if len(contractedBasisTensors) == 0:
             self.components = sympy.Symbol("x") * np.zeros(self.shape)
+            self.variableMap = {}
             return
 
         # Make sure all the tensors have the same shape
-        shapes = list(set([t.shape for _, t in contractedBasisTensors]))
+        shapes = list(set([t.shape for _, _, t in contractedBasisTensors]))
         if len(shapes) != 1:
             raise Exception("The output coefficients don't all have the correct shape. Found {}".format(shapes))
         
@@ -796,23 +899,28 @@ class ConstantOutputCoefficient:
                 the_offset = the_offset + 1 + contractedBasisTensors[k][0][1][i].derivs
 
         # Implement the derivative symmetries
-        contractedBasisTensors = [(c, self.symmetrizeDerivatives(c,t)) for c, t in contractedBasisTensors]
-        contractedBasisTensors = [(c, self.symmetrizeBlocks(c,t)) for c, t in contractedBasisTensors]
+        contractedBasisTensors = [(c, b, self.symmetrizeDerivatives(c,t)) for c, b, t in contractedBasisTensors]
+        contractedBasisTensors = [(c, b, self.symmetrizeBlocks(c,t)) for c, b, t in contractedBasisTensors]
 
         # Gauss elimination to get rid of all linear dependent ones
         from sympy import Matrix
-        _, linIndeps = Matrix([t.reshape(-1) for _, t in contractedBasisTensors]).T.rref(simplify=True, iszerofunc=lambda x:abs(x)<1e-13)
+        _, linIndeps = Matrix([t.reshape(-1) for _, _, t in contractedBasisTensors]).T.rref(simplify=True, iszerofunc=lambda x:abs(x)<1e-13)
         basis = [contractedBasisTensors[i] for i in linIndeps]
 
         # After the Gauss elimination no tensors left?
         if len(basis) == 0:
             self.components = sympy.Symbol("x") * np.zeros(self.shape)
+            self.variableMap = {}
             return
 
         # Calculate the components
         uniqueId = randomName(length=5)
-        self.components = sum([sympy.Symbol("{}_{}".format(uniqueId, i)) * b[1] for i, b in enumerate(basis, 1)])
-        self.variableMap = { sympy.Symbol("{}_{}".format(uniqueId, i)) : b[0] for i, b in enumerate(basis, 1) }
+        self.components = sum([sympy.Symbol("{}_{}".format(uniqueId, i)) * b[2] for i, b in enumerate(basis, 1)])
+        self.variableMap = { sympy.Symbol("{}_{}".format(uniqueId, i)) : (b[0], b[1]) for i, b in enumerate(basis, 1) }
+
+        #print(self)
+        #print(self.toLaTeX())
+        #print()
 
 
 """
@@ -871,23 +979,59 @@ class OutputCoefficient:
                 b = tuple(range(d + 1))
 
                 tmp = np.tensordot(tmp, dphis, axes=(a, b))
+            
+            print("       Finished {}".format(c))
 
             # Ignore zeros
             return tmp
 
-        c = get_client()
-        futures = [c.submit(generateConstCoeff, coeff, self.parametrization.dofs, self.order) for coeff in self.constCoeffs]
+        futures = [generateConstCoeff(coeff, self.parametrization.dofs, self.order) for coeff in self.constCoeffs]
+        #c = get_client()
+        #futures = [c.submit(generateConstCoeff, coeff, self.parametrization.dofs, self.order) for coeff in self.constCoeffs]
 
-        secede()
-        c.gather(futures)
-        rejoin()
+        #secede()
+        #c.gather(futures)
+        #rejoin()
 
         # Add them together
         if len(futures) == 0:
             return
-        self.components = futures[0].result()
+        self.components = futures[0]#.result()
         for i in range(1, len(futures)):
-            self.components = self.components + futures[i].result()
+            self.components = self.components + futures[i]#.result()
+        
+        #print(self.toLaTeX())
+        
+        # Add O(n+1) terms
+
+        ## Add the O(n+1) terms but more quickly. Probably good idea to cache that
+        ## for future reference
+
+        #os = self.parametrization.Odiff(self.maxOrder - self.order + 1, collapse=self.collapse)
+        #self.components = self.components + os
+
+        # Merge all variable maps
+        self.variableMap = { k: v for coeff in self.constCoeffs for k, v in coeff.variableMap.items() }
+    
+    def toLaTeX(self, substitions={}):
+        lines = []
+        for coeff in self.constCoeffs:
+            s = coeff.toLaTeX(substitions)
+            if s != "0": lines.append(s)
+        return " +\n".join(lines)
+
+
+    @property
+    def name(self):
+        s = "C"
+
+        def alpha(N, offset=0):
+            return list(map(chr, range(ord('A')+offset, ord('A')+N+offset)))
+
+        if self.order > 0:
+            s = s + "_{}".format("".join(alpha(self.order)))
+
+        return s
 
 
     def __str__(self):
@@ -907,4 +1051,5 @@ class OutputCoefficient:
 
 
 def all_coefficients(parametrization, J, order, collapse=2):
-    return [OutputCoefficient(parametrization, J, o, order, collapse) for o in range(order+1)]
+    result = [OutputCoefficient(parametrization, J, o, order, collapse) for o in range(order+1)]
+    return result

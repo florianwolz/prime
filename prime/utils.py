@@ -188,3 +188,14 @@ def factorial(N):
     if N==0: return 1
     elif N==1: return 1
     else: return N*factorial(N-1)
+
+
+class memoize:
+    def __init__(self, fn):
+        self.fn = fn
+        self.memo = {}
+
+    def __call__(self, *args, **kwargs):
+        if args not in self.memo:
+            self.memo[args] = self.fn(*args, **kwargs)
+        return self.memo[args]

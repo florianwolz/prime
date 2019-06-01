@@ -13,7 +13,7 @@
 #   limitations under the License.
 
 import numpy as np
-from prime.equations.equation import SequenceEquation, F, SpatialN, MaxOrder
+from prime.equations.equation import SequenceEquation, F, FN, SpatialN, MaxOrder
 from prime.input.parametrization import spatial_diff
 from prime.utils import symmetrize
 
@@ -40,4 +40,4 @@ class C16(SequenceEquation):
             result += (N-2) * Cd
 
         x = len(result.shape)
-        return symmetrize(result, [x-2, x-1)
+        return symmetrize(result, [x-2, x-1])
