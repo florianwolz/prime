@@ -24,8 +24,8 @@ geometry by the gravitational closure mechanism.
  - [x] Generation of a list of all perturbative output coefficients
  - [x] Generation of the basis terms of the perturbative output coefficients
  - [x] Collecting all perturbative output coefficients into the polynomial in the degrees of freedom
- - [ ] Writing classes for all closure equations
- - [ ] Plugging all coefficients into the closure equations
+ - [X] Writing classes for all closure equations
+ - [X] Plugging all coefficients into the closure equations
  - [ ] Solving them
  - [ ] Fancy output of the whole Lagrangian
 
