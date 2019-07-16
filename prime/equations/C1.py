@@ -19,10 +19,11 @@ from prime.equations.equation import ScalarEquation
 class C1(ScalarEquation):
     shape = (3,3)
     componentWise = False
+    name = "C1"
 
-    def __init__(self, parametrization, Cs, E, F, M, p, degP):
+    def __init__(self, parametrization, Cs, E, F, M, p, degP, *args, **kwargs):
         # Initialize the scalar equation
-        ScalarEquation.__init__(self, parametrization, Cs, E, F, M, p,degP=degP)
+        ScalarEquation.__init__(self, parametrization, Cs, E, F, M, p, degP, *args, **kwargs)
 
     def allComponents(self):
         # Prepare the result

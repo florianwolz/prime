@@ -240,9 +240,12 @@ def spatial_diff(expr, direction=None, order=None):
     if type(expr) is np.ndarray:
         tmp = np.vectorize(lambda x : np.array(spatial_diff(x, direction).tolist()))
         return tmp(expr)
+    
+    if np.isreal(expr):
+        return np.array(0.0)
 
     # If there is a big O present, treat it separately
-    if expr.getO() is not None:
+    if hasattr(expr, "getO") and expr.getO() is not None:
         expr1 = spatial_diff(expr.removeO(), direction).tolist()
         expr2 = spatial_diff(expr.getO().expr, direction).tolist()
         return np.array([a+O(b) for a,b in zip(expr1, expr2)])

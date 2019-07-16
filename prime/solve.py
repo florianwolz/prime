@@ -22,7 +22,7 @@ from prime.output import all_coefficients
 from prime.equations import allEqns
 
 from prime.reporter import Reporter, Status
-from prime.checkpoints import get_checkpoint
+#from prime.checkpoints import get_checkpoint
 
 import numpy as np
 from sympy import Symbol, O
@@ -54,7 +54,7 @@ def solve(parametrization, kinematical_coefficient, normal_coefficient=None, ord
         reporter = Reporter(order=order, silent=True)
 
         # Retrieve the checkpoints instance
-        cs = get_checkpoint()
+        #cs = get_checkpoint()
 
         log(sp, "Start calculating.\nThis is gone take a while")
 
@@ -96,14 +96,14 @@ def solve(parametrization, kinematical_coefficient, normal_coefficient=None, ord
 
         # Drop all the higher order terms in the tensors, since we won't need them
         log(sp, "Drop all higher order terms in the coefficients")
-        #F = dropHigherOrder(F, parametrization.dofs, order=order)
-        #M = dropHigherOrder(M, parametrization.dofs, order=order+1)
-        #p = dropHigherOrder(kinematical_coefficient.components, parametrization.dofs, order=order+1)
+        F = dropHigherOrder(F, parametrization.dofs, order=order)
+        M = dropHigherOrder(M, parametrization.dofs, order=order+1)
+        p = dropHigherOrder(kinematical_coefficient.components, parametrization.dofs, order=order+1)
 
         ##F = client.submit(dropHigherOrder, F, parametrization.dofs, order=order)
         ##M = client.submit(dropHigherOrder, M, parametrization.dofs, order=order+1)
         ##p = client.submit(dropHigherOrder, kinematical_coefficient.components, parametrization.dofs, order=order+1)
-        #degP = kinematical_coefficient.degP
+        degP = kinematical_coefficient.degP
         ##p.add_done_callback(lambda x : reporter.update("p", Status.PREPARING))
 
         # Setup the E coefficient
@@ -159,8 +159,6 @@ def solve(parametrization, kinematical_coefficient, normal_coefficient=None, ord
 
         log(sp, "Finished output coefficient ansatz. Total of {} gravitational constants.".format(totals))
     
-    return
-
     #def generateCoeffs(coeffs):
     #    c = get_client()
     #    futures = [c.submit(coeff.generate) for coeff in coeffs]
@@ -179,21 +177,29 @@ def solve(parametrization, kinematical_coefficient, normal_coefficient=None, ord
 
     #coeffs = client.submit(generateCoeffs, coeffs)
 
-    print(coeffs.result())
-    print("Finished output coefficient ansatz.")
+    #print(coeffs.result())
+    #print("Finished output coefficient ansatz.")
 
-    def generateAllEqns(param, E, F, M, p, degP, Cs, order):
-        coeffs = [Cs.components for C in Cs]
+        def generateAllEqns(param, E, F, M, p, degP, Cs, order):
+            coeffs = [C.components for C in Cs]
 
-        # Add the next coefficient that only contains O(1) terms
-        x = len(coeffs)
-        shape = tuple([len(param.dofs) for i in range(x)])
-        coeffs.append(np.full(shape, O(1)))
+            # Add the next coefficient that only contains O(1) terms
+            x = len(coeffs)
+            shape = tuple([len(param.dofs) for i in range(x)])
+            coeffs.append(np.full(shape, O(1)))
 
-        return allEqns(Cs, E, F, M, p, degP, order)
+            return allEqns(param, coeffs, E, F, M, p, degP, order)
     
-    # Collect all equations
-    eqns = client.submit(generateAllEqns, parametrization, E, F, M, p, degP, coeffs, order+1)
+        # Collect all equations
+        #eqns = client.submit(generateAllEqns, parametrization, E, F, M, p, degP, coeffs, order+1)
+        eqns = generateAllEqns(parametrization, E, F, M, p, degP, coeffs, order+1)
+
+        # Get all the relations
+        relations = [relation for eq in eqns for relation in eq.relations(diagonalize=False)]
+
+        print("Final step. Diagonalize ...")
+
+        return
 
     # Solve
     def solveEquation(equation):

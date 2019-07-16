@@ -962,6 +962,8 @@ class OutputCoefficient:
     constant coefficients with phis and its derivatives
     """
     def generate(self):
+        expandify = np.vectorize(lambda x : x.expand())
+
         def generateConstCoeff(c, dofs, order):
             # Generate the coefficient
             c.generate()
@@ -980,12 +982,14 @@ class OutputCoefficient:
 
                 tmp = np.tensordot(tmp, dphis, axes=(a, b))
             
-            print("       Finished {}".format(c))
+            #print("       Finished {}".format(c))
+            tmp = expandify(tmp)
 
             # Ignore zeros
             return tmp
 
         futures = [generateConstCoeff(coeff, self.parametrization.dofs, self.order) for coeff in self.constCoeffs]
+
         #c = get_client()
         #futures = [c.submit(generateConstCoeff, coeff, self.parametrization.dofs, self.order) for coeff in self.constCoeffs]
 
@@ -996,9 +1000,11 @@ class OutputCoefficient:
         # Add them together
         if len(futures) == 0:
             return
-        self.components = futures[0]#.result()
-        for i in range(1, len(futures)):
-            self.components = self.components + futures[i]#.result()
+
+        self.components = np.array(sum(futures))
+        #self.components = futures[0]#.result()
+        #for i in range(1, len(futures)):
+        #    self.components = self.components + futures[i]#.result()
         
         #print(self.toLaTeX())
         

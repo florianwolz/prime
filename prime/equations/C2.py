@@ -20,6 +20,8 @@ class C2(ScalarEquation):
     shape = (F,3,3)
     componentWise=False
 
+    name = "C2"
+
     def __init__(self, parametrization, Cs, E, F, M, p, degP, *args, **kwargs):
         # Initialize the scalar equation
         ScalarEquation.__init__(self, parametrization, Cs, E, F, M, p, degP, *args, **kwargs)
@@ -28,7 +30,7 @@ class C2(ScalarEquation):
     Shape: B gamma mu
     """
     def allComponents(self):
-        W = np.tensordot(np.eye(len(self.paraetrization.dofs)), np.eye(3)) + self.diff(self.F, order=0).transpose(0,3,2,1)
+        W = np.tensordot(np.eye(len(self.parametrization.dofs)), np.eye(3), axes=0) + self.diff(self.F, order=0).transpose(0,3,2,1)
         result = -np.tensordot(self.Cs[1], W, axes=(0,0))
 
         # Add the E term

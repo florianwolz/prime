@@ -3,7 +3,7 @@ import os
 import datetime
 
 from dask.distributed import Client
-from prime.checkpoints import Checkpoints
+#from prime.checkpoints import Checkpoints
 
 def deltaToStr(delta):
     days = delta.days
@@ -36,14 +36,14 @@ def solve(input):
     with open(input, "rb") as f:
         script = f.read()
     
-    cs = Checkpoints(os.path.splitext(os.path.basename(input))[0] + "_checkpoints.dat")
+    #cs = Checkpoints(os.path.splitext(os.path.basename(input))[0] + "_checkpoints.dat")
 
     # Compile the script
     code = compile(script, input, 'exec')
 
     namespace = {
         "scheduler": "local",
-        "checkpoints": cs
+        #"checkpoints": cs
     }
 
     # Start the execution

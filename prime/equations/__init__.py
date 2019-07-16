@@ -12,6 +12,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+from prime.equations.equation import ScalarEquation
+
 # Import the scalar equations
 from prime.equations.C1 import C1
 from prime.equations.C2 import C2
@@ -37,11 +39,27 @@ from prime.equations.C19 import C19
 from prime.equations.C20 import C20
 from prime.equations.C21 import C21
 
+
+class TestEquation(ScalarEquation):
+    shape = tuple()
+    componentWise = False
+
+    def __init__(self, parametrization, Cs, E, F, M, p, degP, *args, **kwargs):
+        # Initialize the scalar equation
+        ScalarEquation.__init__(self, parametrization, Cs, E, F, M, p, degP, *args, **kwargs)
+    
+    def allComponents(self):
+        result = self.Cs[0]
+        return result
+
+
 # Load all the equations into a list
 equations = [
-    C1, C2, C3, C4, C5, C6, C7,
-    C8, C9, C10, C11, C12, C13, C14, C15, C16, C17, C18, C19, C20, C21
+    #C1, 
+    #C2, 
+    C3, #C4, C5, C6, C7,
+    #C8, C9, C10, C11, C12, C13, C14, C15, C16, C17, C18, C19, C20, C21
 ] 
 
-def allEqns(Cs, E, F, M, p, degP, order):
-    return [eq(Cs=Cs, E=E, F=F, M=M, p=p, degP=degP, order=order) for eq in equations]
+def allEqns(parametrization, Cs, E, F, M, p, degP, order):
+    return [eq(parametrization, Cs=Cs, E=E, F=F, M=M, p=p, degP=degP, order=order) for eq in equations]

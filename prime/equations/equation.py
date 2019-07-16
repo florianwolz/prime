@@ -1,19 +1,27 @@
 import numpy as np
-from sympy import poly, diff, Matrix
+from sympy import poly, diff, Matrix, expand
 from prime.input.parametrization import jet_diff, spatial_diff, jet_variables
 from prime.utils import to_tensor
 
 
 def filter_non_jet_vars(expr, dofs):
+    if type(expr) is np.ndarray:
+        res = [var for vars in [filter_non_jet_vars(e, dofs) for e in expr.reshape(-1)] for var in vars]
+
+        d = dict()
+        for var in res:
+            d[str(var)] = var
+
+        return list(d.values())
+
     symbs = expr.free_symbols
     result = []
     for s in symbs:
         t = str(s).split("_")
         if not t[0] in [str(d) for d in dofs]: continue
         result.append(s)
+    # TODO: Sort result
     return result
-
-
 
 
 ##
@@ -39,8 +47,9 @@ MaxOrder = ShapeToken('MaxOrder')
 class ScalarEquation(object):
     shape = ()
     componentWise = True
+    name = "ScalarEquation"
 
-    def __init__(self, parametrization, Cs, E, F, M, p, degP, *args, **kwargs):
+    def __init__(self, parametrization, Cs, E, F, M, p, degP, order=1, *args, **kwargs):
         self.parametrization = parametrization
         self.Cs = Cs
         self.E = E
@@ -50,16 +59,16 @@ class ScalarEquation(object):
         self.degP = degP
 
         self.collapse = kwargs.get('collapse', 2)
-        self.order = kwargs.get('order', 1)
+        self.order = order
 
         # Replace the F in shapes by the correct number of degrees of freedoms
         self.shape = [len(self.parametrization.dofs) if type(x) is ShapeToken and x.name == 'F' else x for x in self.shape]
 
         # Inspect the component method
-        if not hasattr(self, "component"): raise Exception("The equation does not calculate any components.")
-        from inspect import signature
-        if len(self.shape)+1 != len(signature(self.component).parameters):
-            raise Exception("The method to calculate the components of the equation has the wrong signature.")
+        #if not hasattr(self, "component"): raise Exception("The equation does not calculate any components.")
+        #from inspect import signature
+        #if len(self.shape)+1 != len(signature(self.component).parameters):
+        #    raise Exception("The method to calculate the components of the equation has the wrong signature.")
 
         # Setup the jet derivative operation
         self.diff = jet_diff(parametrization)
@@ -101,10 +110,26 @@ class ScalarEquation(object):
     Extracts all the relations on the arbitrary constants of the output coefficients
     """
     def relations(self, diagonalize=True):
+        print(F"Solve equation {self.name} ...")
+
         if not self.calculated: self.calculate()
 
         # Extract all the coefficients from the components
-        polys = [poly(expr, filter_non_jet_vars(expr, self.parametrization.dofs)).coeffs() for expr in np.nditer(self.components)]
+        exprs = self.components.reshape(-1).tolist()
+        #expr = [expr.expand() for expr in exprs]
+        variables = [filter_non_jet_vars(expr, self.parametrization.dofs) for expr in exprs]
+        
+        # Merge the jet variables
+        variables = [var for vars_ in variables for var in vars_]
+
+        variables = list(({ str(v) : v for v in variables}).values())
+#
+#        variables = list(dict.fromkeys([str(v) for v in variables], variables).values())
+        print("Build polynomials ...")
+
+        polys = [poly(expand(expr), variables).coeffs() for expr in exprs]
+
+        print("Derive relations ...")
     
         # Flatten the relations into a list
         relations = [y for x in polys for y in x]
@@ -114,10 +139,13 @@ class ScalarEquation(object):
 
         # Diagonalize if necessary
         if diagonalize:
+            print("Diagonalize ...")
             M = Matrix([[diff(relation, var) for var in syms] for relation in relations])
             M, _ = M.rref()
             relations = [sum([M[i,j] * sym for j, sym in enumerate(syms)]) for i, _ in enumerate(relations)]
             relations = [relation for relation in relations if relation != 0]
+        
+        print(F"Finished equation {self.name}.")
 
         return relations, syms
     
@@ -171,7 +199,7 @@ class ScalarEquation(object):
     def coefficientDerivativeContraction(self, coeff, N=0, derivOrder=0, Aposition=0, freeIndices=0):
         Cshape = self.Cs[N].shape
         Cd = self.diff(expr=self.Cs[N], order=derivOrder+freeIndices)
-        coeffd = spatial_diff(expr=coeff, order=derivOrder) if derivOrder == 0 else coeff
+        coeffd = spatial_diff(expr=coeff, order=derivOrder) if derivOrder > 0 else coeff
 
         # Calculate the index positions for the contraction
         Caxes = (len(Cshape), ) + tuple(range(len(Cd.shape) - derivOrder, len(Cd.shape)))
@@ -218,6 +246,7 @@ class SequenceEquation(object):
     onlyEven = False
     onlyOdd = False
     Nmax = 0
+    name = "SequenceEquation"
 
     def __init__(self, parametrization, Cs, E, F, M, p, degP, *args, **kwargs):
         self.parametrization = parametrization
@@ -305,10 +334,14 @@ class SequenceEquation(object):
     Extracts all the relations on the arbitrary constants of the output coefficients
     """
     def relations(self, diagonalize=True):
+        print(F"Solve equation {self.name} ...")
+
         if not self.calculated: self.calculate()
 
         # Extract all the coefficients from the components
         polys = [poly(expr, filter_non_jet_vars(expr, self.parametrization.dofs)).coeffs() for expr in np.nditer(self.components)]
+
+        print("Derive relations ...")
     
         # Flatten the relations into a list
         relations = [y for x in polys for y in x]
@@ -318,10 +351,13 @@ class SequenceEquation(object):
 
         # Diagonalize if necessary
         if diagonalize and len(relations) > 0:
+            print("Diagonalize ...")
             M = Matrix([[diff(relation, var) for var in syms] for relation in relations])
             M, _ = M.rref()
             relations = [sum([M[i,j] * sym for j, sym in enumerate(syms)]) for i, _ in enumerate(relations)]
             relations = [relation for relation in relations if relation != 0]
+        
+        print(F"Done with {self.name}")
 
         return relations, syms
         

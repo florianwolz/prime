@@ -20,10 +20,11 @@ from prime.utils import symmetrize
 class C3(ScalarEquation):
     shape = (F,3,3)
     componentWise = False
+    name = "C3"
 
     def __init__(self, parametrization, Cs, E, F, M, p, degP, *args, **kwargs):
         # Initialize the scalar equation
-        ScalarEquation.__init__(self, parametrization, Cs[0:2], E, F, M, p, degP, *args, **kwargs)
+        ScalarEquation.__init__(self, parametrization, Cs[0:3], E, F, M, p, degP, *args, **kwargs)
     
     """
     Calculate all components
@@ -41,6 +42,7 @@ class C3(ScalarEquation):
             result += tmp
         
         # Third summand
+        # FIXME
         tmp = self.sumCoefficientDerivativeTrace(N=1, freeIndices=2, combinatorial='(K+2)*(K+1)/2', alternatingSign=True)
         if tmp is not None:
             result -= tmp
