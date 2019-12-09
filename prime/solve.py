@@ -194,10 +194,14 @@ def solve(parametrization, kinematical_coefficient, normal_coefficient=None, ord
         #eqns = client.submit(generateAllEqns, parametrization, E, F, M, p, degP, coeffs, order+1)
         eqns = generateAllEqns(parametrization, E, F, M, p, degP, coeffs, order+1)
 
+        print(eqns)
+
         # Get all the relations
         relations = [relation for eq in eqns for relation in eq.relations(diagonalize=False)]
 
         print("Final step. Diagonalize ...")
+
+        print(len(relations))
 
         return
 

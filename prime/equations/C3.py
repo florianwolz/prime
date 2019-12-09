@@ -43,7 +43,7 @@ class C3(ScalarEquation):
         
         # Third summand
         # FIXME
-        tmp = self.sumCoefficientDerivativeTrace(N=1, freeIndices=2, combinatorial='(K+2)*(K+1)/2', alternatingSign=True)
+        tmp = self.sumCoefficientDerivativeTrace(N=0, freeIndices=2, combinatorial='(K+2)*(K+1)/2', alternatingSign=True)
         if tmp is not None:
             result -= tmp
 

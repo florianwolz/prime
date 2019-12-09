@@ -23,12 +23,13 @@ class C21(SequenceEquation):
     onlyOdd = True
     componentWise = False
 
-    def __init__(self, parametrization, Cs, E, F, M, p, *args, **kwargs):
+    def __init__(self, parametrization, Cs, E, F, M, p, degP, *args, **kwargs):
         # Initialize the scalar equation
-        SequenceEquation.__init__(self, parametrization, [Cs[0]], E, F, M, p, *args, **kwargs)
+        SequenceEquation.__init__(self, parametrization, Cs, E, F, M, p, degP, *args, **kwargs)
+
     
     def allComponents(self, N):
-        result = 0
+        result = np.zeros(tuple([3 for i in range(N)]))
 
         # First term
         for K in range(N-1,self.collapse + 1):
@@ -57,5 +58,8 @@ class C21(SequenceEquation):
                     tmp = tmp.trace(0, len(tmp.shape)-1)
 
                 result = result + (-1)**J * binomial(K,J-1) * binomial(J,N) * tmp
+
+        print(result)
+        print(result.shape)
 
         return result

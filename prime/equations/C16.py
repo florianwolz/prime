@@ -22,8 +22,8 @@ class C16(SequenceEquation):
     Nmax = MaxOrder-1
     componenWise = False
 
-    def __init__(self, parametrization, Cs, E, F, M, p):
-        SequenceEquation.__init__(self, parametrization, Cs, E, F, M, p)
+    def __init__(self, parametrization, Cs, E, F, M, p, degP, *args, **kwargs):
+        SequenceEquation.__init__(self, parametrization, Cs, E, F, M, p, degP, *args, **kwargs)
 
     def allComponents(self, N):
         # First term

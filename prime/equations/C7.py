@@ -23,7 +23,7 @@ class C7(ScalarEquation):
 
     def __init__(self, parametrization, Cs, E, F, M, p, *args, **kwargs):
         # Initialize the scalar equation
-        ScalarEquation.__init__(self, parametrization, Cs[0:2], E, F, M, p, *args, **kwargs)
+        ScalarEquation.__init__(self, parametrization, Cs, E, F, M, p, *args, **kwargs)
     
     def allComponents(self):
         result = 0
@@ -40,7 +40,7 @@ class C7(ScalarEquation):
                 tmp = symmetrize(tmp, list(range(len(tmp.shape))))
                 tmp = spatial_diff(tmp, order=J+1)
                 for i in range(J+1):
-                    tmp = tmp.trace(0, len(tmp.shape)-1)
+                    tmp = tmp.trace(axis1=0, axis2=len(tmp.shape)-1)
 
                 result = result + (-1)**J * binomial(K,J) * (J-1) * tmp
 

@@ -29,7 +29,7 @@ class C5(ScalarEquation):
         # First summand
         tmp = np.tensordot(self.Cs[1], np.tensordot(self.diff(self.M, order=0), self.M, axes=(2,0)), axes=(0,0))
         tmp = tmp - tmp.transpose()
-        result = spatial_diff(tmp, order=1).trace(0,1)
+        result = spatial_diff(tmp, order=1).trace(axis1=0, axis2=1)
 
         # Second summand
         tmp = np.tensordot(self.Cs[1], self.E, axes=(0,0))

@@ -22,8 +22,9 @@ class C17(SequenceEquation):
     Nmax = MaxOrder-1
     componenWise = False
 
-    def __init__(self, parametrization, Cs, E, F, M, p):
-        SequenceEquation.__init__(self, parametrization, Cs, E, F, M, p)
+    def __init__(self, parametrization, Cs, E, F, M, p, degP, *args, **kwargs):
+        SequenceEquation.__init__(self, parametrization, Cs, E, F, M, p, degP, *args, **kwargs)
+    
 
     def allComponents(self, N):
         V = np.tensordot(self.E, self.p, axes=(1,1)) - np.tensordot(self.F, spatial_diff(self.p, order=1), axes=((2,0), (1,1)))

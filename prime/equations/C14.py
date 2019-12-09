@@ -22,8 +22,8 @@ class C14(SequenceEquation):
     Nmax = MaxOrder
     componenWise = False
 
-    def __init__(self, parametrization, Cs, E, F, M, p):
-        SequenceEquation.__init__(self, parametrization, Cs, E, F, M, p)
+    def __init__(self, parametrization, Cs, E, F, M, p, degP, *args, **kwargs):
+        SequenceEquation.__init__(self, parametrization, Cs, E, F, M, p, degP, *args, **kwargs)
 
     def allComponents(self, N):
         # Calculate the coefficient in brackets

@@ -13,6 +13,7 @@ def filter_non_jet_vars(expr, dofs):
             d[str(var)] = var
 
         return list(d.values())
+    elif not hasattr(expr, "free_symbols"): return []
 
     symbs = expr.free_symbols
     result = []
@@ -35,7 +36,7 @@ class ShapeToken:
         return ShapeToken(self.name, self.offset+x)
 
     def __sub__(self, x):
-        return ShapeToken(self.name, self.offset+x)
+        return ShapeToken(self.name, self.offset-x)
 
 F = ShapeToken('F')
 FN = ShapeToken('FN')
@@ -99,7 +100,7 @@ class ScalarEquation(object):
             self.components = np.array(self.components)
 
         # Get rid of all the dirt terms
-        dropOs = np.vectorize(lambda x : x.removeO())
+        dropOs = np.vectorize(lambda x : x.removeO() if hasattr(x, "removeO") else x)
         self.components = dropOs(self.components)
 
         # Mark the equation as calculated
@@ -116,6 +117,8 @@ class ScalarEquation(object):
 
         # Extract all the coefficients from the components
         exprs = self.components.reshape(-1).tolist()
+        exprs = [expr for expr in exprs if expr != 0]
+
         #expr = [expr.expand() for expr in exprs]
         variables = [filter_non_jet_vars(expr, self.parametrization.dofs) for expr in exprs]
         
@@ -145,7 +148,7 @@ class ScalarEquation(object):
             relations = [sum([M[i,j] * sym for j, sym in enumerate(syms)]) for i, _ in enumerate(relations)]
             relations = [relation for relation in relations if relation != 0]
         
-        print(F"Finished equation {self.name}.")
+        print(F"Finished equation {self.name} with {len(relations)} relations.")
 
         return relations, syms
     
@@ -182,6 +185,7 @@ class ScalarEquation(object):
         for K in range(0, maxOrder+1):
             factor = (-1)**K if alternatingSign else 1
             locals_["K"] = K
+            locals_["N"] = N
             factor = factor * eval(combinatorial, locals_)
 
             if K == 0:
@@ -230,6 +234,7 @@ class ScalarEquation(object):
         for K in range(0, maxOrder+1):
             factor = (-1)**K if alternatingSign else 1
             locals_["K"] = K
+            locals_["N"] = N
             factor = factor * eval(combinatorial, locals_)
 
             if K == 0:
@@ -324,8 +329,9 @@ class SequenceEquation(object):
         self.components = np.array(self.components)
 
         # Get rid of all the dirt terms
-        dropOs = np.vectorize(lambda x : x.removeO())
-        self.components = dropOs(self.components)
+        dropOs = np.vectorize(lambda x : x.removeO() if hasattr(x, "removeO") else x)
+        if len(self.components) > 0:
+            self.components = dropOs(self.components)
         
         # Mark the equation as calculated
         self.calculated = True
@@ -338,8 +344,13 @@ class SequenceEquation(object):
 
         if not self.calculated: self.calculate()
 
+        # Reshape the components and filter zeros
+        components = np.array([e for e in self.components.reshape(-1).tolist() if e != 0])
+
+        if len(components) == 0: return [], []
+
         # Extract all the coefficients from the components
-        polys = [poly(expr, filter_non_jet_vars(expr, self.parametrization.dofs)).coeffs() for expr in np.nditer(self.components)]
+        polys = [poly(expr, filter_non_jet_vars(expr, self.parametrization.dofs)).coeffs() for expr in np.nditer(components)]
 
         print("Derive relations ...")
     
@@ -393,6 +404,7 @@ class SequenceEquation(object):
         for K in range(0, maxOrder+1):
             factor = (-1)**K if alternatingSign else 1
             locals_["K"] = K
+            locals_["N"] = N
             factor = factor * eval(combinatorial, locals_)
 
             if K == 0:

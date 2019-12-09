@@ -23,7 +23,7 @@ class C6(ScalarEquation):
 
     def __init__(self, parametrization, Cs, E, F, M, p, *args, **kwargs):
         # Initialize the scalar equation
-        ScalarEquation.__init__(self, parametrization, Cs[0:2], E, F, M, p, *args, **kwargs)
+        ScalarEquation.__init__(self, parametrization, Cs, E, F, M, p, *args, **kwargs)
     
     # TODO: In the Cs also setup the first unconsidered one as O(1)
     
@@ -47,5 +47,5 @@ class C6(ScalarEquation):
         tmp = self.sumCoefficientDerivativeTrace(N=1, freeIndices=1, combinatorial='K+1', alternatingSign=True)
         if tmp is not None:
             result -= tmp
-        
+                
         return result

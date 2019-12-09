@@ -20,10 +20,11 @@ from prime.utils import symmetrize
 class C4(ScalarEquation):
     shape = (F,3)
     componentWise = False
+    name = "C4"
 
     def __init__(self, parametrization, Cs, E, F, M, p, degP, *args, **kwargs):
         # Initialize the scalar equation
-        ScalarEquation.__init__(self, parametrization, Cs[0:2], E, F, M, p, degP, *args, **kwargs)
+        ScalarEquation.__init__(self, parametrization, Cs, E, F, M, p, degP, *args, **kwargs)
     
     """
     Index layout: (B, mu)
@@ -43,7 +44,7 @@ class C4(ScalarEquation):
             result -= tmp
         
         # Fourth summand
-        tmp = self.sumCoefficientDerivativeTrace(N=1, freeIndices=1, combinatorial='K+1', alternatingSign=True)
+        tmp = self.sumCoefficientDerivativeTrace(N=0, freeIndices=1, combinatorial='K+1', alternatingSign=True)
         if tmp is not None:
             result -= tmp
         
