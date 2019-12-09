@@ -441,6 +441,7 @@ class SequenceEquation(object):
         for K in range(0, maxOrder+1):
             factor = (-1)**K if alternatingSign else 1
             locals_["K"] = K
+            locals_["N"] = N
             factor = factor * eval(combinatorial, locals_)
 
             if K == 0:
