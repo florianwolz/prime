@@ -20,6 +20,7 @@ class C10(SequenceEquation):
     shape = (FN, 3, 3)
     Nmax = MaxOrder-1
     componentWise = False
+    name = "C10_N"
 
     def __init__(self, parametrization, Cs, E, F, M, p, degP, *args, **kwargs):
         SequenceEquation.__init__(self, parametrization, Cs, E, F, M, p, degP, *args, **kwargs)

@@ -25,7 +25,8 @@ from prime.reporter import Reporter, Status
 #from prime.checkpoints import get_checkpoint
 
 import numpy as np
-from sympy import Symbol, O
+from sympy import Symbol, O, Matrix
+from sympy import diff as diff_sp
 
 import emoji
 from yaspin import yaspin
@@ -113,17 +114,17 @@ def solve(parametrization, kinematical_coefficient, normal_coefficient=None, ord
         #E.add_done_callback(lambda x : reporter.update("E", Status.PREPARING))
 
         # Add the O(n) terms to the coefficients
-        #log("Add O({}) terms to the coefficients".format(order+1))
-        #o1 = parametrization.O(order+1)
-        #o2 = parametrization.O(order+2)
+        log(sp, "Add O({}) terms to the coefficients".format(order+1))
+        o1 = parametrization.O(order+1)
+        o2 = parametrization.O(order+2)
 
         ##o1 = client.submit(parametrization.O, order+1)
         ##o2 = client.submit(parametrization.O, order+2)
 
-        #F = F + o1
-        #M = M + o2
-        #p = p + o2
-        #E = E + o1
+        F = F + o1
+        M = M + o2
+        p = p + o2
+        E = E + o1
 
         ##F = client.submit(sum, F, o1)
         ##M = client.submit(sum, M, o2)
@@ -194,14 +195,24 @@ def solve(parametrization, kinematical_coefficient, normal_coefficient=None, ord
         #eqns = client.submit(generateAllEqns, parametrization, E, F, M, p, degP, coeffs, order+1)
         eqns = generateAllEqns(parametrization, E, F, M, p, degP, coeffs, order+1)
 
-        print(eqns)
-
         # Get all the relations
-        relations = [relation for eq in eqns for relation in eq.relations(diagonalize=False)]
+        relations, syms = zip(*[eq.relations(diagonalize=False) for eq in eqns])
 
-        print("Final step. Diagonalize ...")
+        # Flatten
+        relations = [rel for eq in relations for rel in eq]
+        syms = list(set([sym for eq in syms for sym in eq]))
 
+        print(F"Found {len(relations)} relations for {len(syms)} variables ...")
+
+        # Diagonalize
+        M = Matrix([[diff_sp(rel, sym) for sym in syms] for rel in relations])
+        M, _ = M.rref(iszerofunc=lambda x:abs(x)<1e-13)
+        relations = [sum([M[i,j] * sym for j, sym in enumerate(syms)]) for i, _ in enumerate(relations)]
+        relations = [relation for relation in relations if relation != 0]
+
+        print(relations)
         print(len(relations))
+        print(len(syms))
 
         return
 

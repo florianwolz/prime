@@ -22,6 +22,7 @@ class C20(SequenceEquation):
     Nmax = Collapse
     onlyEven = True
     componentWise = False
+    name = "C20_N"
 
     def __init__(self, parametrization, Cs, E, F, M, p, degP, *args, **kwargs):
         # Initialize the scalar equation

@@ -21,6 +21,7 @@ class C14(SequenceEquation):
     shape = (FN-1, 3,3)
     Nmax = MaxOrder
     componenWise = False
+    name = "C14_N"
 
     def __init__(self, parametrization, Cs, E, F, M, p, degP, *args, **kwargs):
         SequenceEquation.__init__(self, parametrization, Cs, E, F, M, p, degP, *args, **kwargs)

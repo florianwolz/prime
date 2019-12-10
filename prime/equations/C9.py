@@ -20,6 +20,7 @@ class C9(SequenceEquation):
     shape = (F, SpatialN, 3)
     Nmax = Collapse + 1
     componentWise = False
+    name = "C9_N"
 
     def __init__(self, parametrization, Cs, E, F, M, p, degP, *args, **kwargs):
         SequenceEquation.__init__(self, parametrization, Cs, E, F, M, p, degP, *args, **kwargs)

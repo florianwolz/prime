@@ -98,6 +98,15 @@ class ScalarEquation(object):
         # Turn the components into a numpy array
         if not type(self.components) is np.ndarray:
             self.components = np.array(self.components)
+        
+        showOs = np.vectorize(lambda x : x.getO())
+        print("Cs: ")
+        for i in range(len(self.Cs)):
+            print(self.Cs[i])
+            print()
+        print("=========================")
+
+        print(showOs(self.components))
 
         # Get rid of all the dirt terms
         dropOs = np.vectorize(lambda x : x.removeO() if hasattr(x, "removeO") else x)
@@ -325,13 +334,14 @@ class SequenceEquation(object):
         #         it is simply a vector. Since we will then iterate over the components anyway, we do not care
         #         about this.
         
-        # Turn into a numpy array
-        self.components = np.array(self.components)
-
         # Get rid of all the dirt terms
         dropOs = np.vectorize(lambda x : x.removeO() if hasattr(x, "removeO") else x)
-        if len(self.components) > 0:
-            self.components = dropOs(self.components)
+        self.components = [dropOs(component) for component in self.components if len(component) > 0]
+        print("Calculated components")
+
+        # Reshape into a list
+        self.components = np.array([z for y in [x.reshape(-1).tolist() for x in self.components] for z in y])
+        print(F"Reshaped into a list with {len(self.components)} entries")
         
         # Mark the equation as calculated
         self.calculated = True
@@ -344,13 +354,32 @@ class SequenceEquation(object):
 
         if not self.calculated: self.calculate()
 
-        # Reshape the components and filter zeros
-        components = np.array([e for e in self.components.reshape(-1).tolist() if e != 0])
-
-        if len(components) == 0: return [], []
+        if len(self.components) == 0: 
+            print(F"Finished equation {self.name} with 0 relations.")
+            return [], []
 
         # Extract all the coefficients from the components
-        polys = [poly(expr, filter_non_jet_vars(expr, self.parametrization.dofs)).coeffs() for expr in np.nditer(components)]
+        print("Extract coefficients ...")
+
+        polys = None
+
+        # Polyfy-Lambda
+        def polyfy_fn(x):
+            if x != 0:
+                return poly(x, filter_non_jet_vars(x, self.parametrization.dofs))
+            else:
+                return None
+
+        # Need this convoluted way since sometimes vectorize fails, in this case fall back to pure ol' Python iterations
+        try:
+            polyfy = np.vectorize(polyfy_fn)
+            polys = polyfy(self.components).tolist()
+        except:
+            # Vectorization did not work, try manually by iterating over all components
+            polys = [poly(x, filter_non_jet_vars(x, self.parametrization.dofs)) for x in self.components.tolist()]
+        
+        polys = [p for p in polys if p is not None]
+        polys = [x.coeffs() for x in polys]
 
         print("Derive relations ...")
     
@@ -368,7 +397,7 @@ class SequenceEquation(object):
             relations = [sum([M[i,j] * sym for j, sym in enumerate(syms)]) for i, _ in enumerate(relations)]
             relations = [relation for relation in relations if relation != 0]
         
-        print(F"Done with {self.name}")
+        print(F"Finished equation {self.name} with {len(relations)} relations.")
 
         return relations, syms
         
@@ -422,7 +451,7 @@ class SequenceEquation(object):
     def coefficientDerivativeContraction(self, coeff, N=0, derivOrder=0, Aposition=0, freeIndices=0):
         Cshape = self.Cs[N].shape
         Cd = self.diff(expr=self.Cs[N], order=derivOrder+freeIndices)
-        coeffd = spatial_diff(expr=coeff, order=derivOrder) if derivOrder == 0 else coeff
+        coeffd = spatial_diff(expr=coeff, order=derivOrder) if derivOrder > 0 else coeff
 
         # Calculate the index positions for the contraction
         Caxes = (len(Cshape), ) + tuple(range(len(Cd.shape) - derivOrder, len(Cd.shape)))
@@ -456,9 +485,11 @@ class SequenceEquation(object):
             locals_["N"] = N
             factor = factor * eval(combinatorial, locals_)
 
+            tmp = factor * self.coefficientDerivativeContraction(coeff, N=N, derivOrder=K, freeIndices=freeIndices, Aposition=Aposition)
+
             if K == 0:
-                result = factor * self.coefficientDerivativeContraction(coeff, N=N, derivOrder=K, freeIndices=freeIndices, Aposition=Aposition)
+                result = tmp
             else:
-                result = result + factor * self.coefficientDerivativeContraction(coeff, N=N, derivOrder=K, freeIndices=freeIndices, Aposition=Aposition)
+                result = result + tmp
         
         return result

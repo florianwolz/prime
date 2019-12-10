@@ -22,6 +22,7 @@ class C21(SequenceEquation):
     Nmax = Collapse
     onlyOdd = True
     componentWise = False
+    name = "C21_N"
 
     def __init__(self, parametrization, Cs, E, F, M, p, degP, *args, **kwargs):
         # Initialize the scalar equation

@@ -40,25 +40,12 @@ from prime.equations.C20 import C20
 from prime.equations.C21 import C21
 
 
-class TestEquation(ScalarEquation):
-    shape = tuple()
-    componentWise = False
-
-    def __init__(self, parametrization, Cs, E, F, M, p, degP, *args, **kwargs):
-        # Initialize the scalar equation
-        ScalarEquation.__init__(self, parametrization, Cs, E, F, M, p, degP, *args, **kwargs)
-    
-    def allComponents(self):
-        result = self.Cs[0]
-        return result
-
-
 # Load all the equations into a list
 equations = [
-    C1, C2, C3, C4, C5, C6, C7,
-    C10, C11, C12, C13, C15, C16, C17, C18, C19, C20, C21
-
-    # Missing: C8, C9, C14
+    C3
+    #C1, C2, C3, C4, C5, C6, C7, C8, 
+    #C9, C10, C11, C12, C13, C14, C15, 
+    #C16, C17, C18, C19, C20, C21
 ] 
 
 def allEqns(parametrization, Cs, E, F, M, p, degP, order):

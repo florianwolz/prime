@@ -20,6 +20,7 @@ class C8(SequenceEquation):
     shape = (SpatialN, 3)
     Nmax = Collapse + 1
     componentWise = False
+    name = "C8_N"
 
     def __init__(self, parametrization, Cs, E, F, M, p, degP, *args, **kwargs):
         SequenceEquation.__init__(self, parametrization, Cs, E, F, M, p, degP, *args, **kwargs)
@@ -31,14 +32,15 @@ class C8(SequenceEquation):
         tmp = self.sumCoefficientDerivativeContraction(self.E, N=0, freeIndices=N, combinatorial='binomial(K+N,K)')
         if tmp is not None:
             result = tmp
-        
+                
         # Second term
         tmp = self.sumCoefficientDerivativeContraction(self.F.swapaxes(1,2), N=0, freeIndices=N-1, combinatorial='binomial(K+N-1,K)')
+
         if tmp is not None:
             # Symmetrize in the N free indices
             tmp = symmetrize(tmp, list(range(0, N)))
 
             if result is None: result = -tmp
             else: result -= tmp
-        
+                
         return result

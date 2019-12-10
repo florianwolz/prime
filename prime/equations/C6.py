@@ -20,6 +20,7 @@ from prime.utils import symmetrize, binomial
 class C6(ScalarEquation):
     shape = (F,F,3)
     componentWise = False
+    name = "C6"
 
     def __init__(self, parametrization, Cs, E, F, M, p, *args, **kwargs):
         # Initialize the scalar equation

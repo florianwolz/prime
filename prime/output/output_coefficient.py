@@ -1013,8 +1013,8 @@ class OutputCoefficient:
         ## Add the O(n+1) terms but more quickly. Probably good idea to cache that
         ## for future reference
 
-        #os = self.parametrization.Odiff(self.maxOrder - self.order + 1, collapse=self.collapse)
-        #self.components = self.components + os
+        os = self.parametrization.Odiff(self.maxOrder - self.order + 1, collapse=self.collapse)
+        self.components = self.components + os
 
         # Merge all variable maps
         self.variableMap = { k: v for coeff in self.constCoeffs for k, v in coeff.variableMap.items() }

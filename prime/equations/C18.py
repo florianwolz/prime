@@ -21,6 +21,7 @@ class C18(SequenceEquation):
     shape = (F, F, SpatialN)
     Nmax = Collapse
     componentWise = False
+    name = "C18_N"
 
     def __init__(self, parametrization, Cs, E, F, M, p, degP, *args, **kwargs):
         SequenceEquation.__init__(self, parametrization, Cs, E, F, M, p, degP, *args, **kwargs)
